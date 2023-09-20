@@ -1,0 +1,24 @@
+<ProjectOpened>:
+    BoxLayout:
+        id:layout1
+        orientation:'vertical'
+        spacing:5
+        Label:
+            id: label1
+            text: ""
+            pos_hint:{'center_x':0.5}
+            size_hint:None,None
+            width:50
+            height:50
+        Label:
+            text:"Choisir le fichier de données"
+            color:"lime"
+            pos_hint:{'center_x':0.5}
+            size_hint:None,None
+            width:50
+            height:50
+        FileChooserIconView:
+            id:filechooser
+            filters:['*.xlsx']
+            on_submit:root.opendata()
+
