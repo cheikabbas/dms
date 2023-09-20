@@ -3,6 +3,7 @@ from pathlib import Path
 
 import kivy
 from kivy.app import App
+from kivy.uix.actionbar import ActionButton
 from kivy.uix.dropdown import DropDown
 from kivy.uix.filechooser import FileChooserIconView
 from kivy.uix.gridlayout import GridLayout
@@ -48,7 +49,7 @@ class HomeScreen(Screen):
 
         my_box1 = BoxLayout(orientation='vertical')
 
-        dms_label = Label(text="DATA COLLECTION MONITORING SYSTEM", font_size='24dp', color="lime")
+        dms_label = Label(text="OUTIL DE CONTROLE QUALITE DE DONNEES", font_size='24dp', color="lime")
 
         new_project = Button(text="Créer un project", size_hint_y=None)
         new_project.bind(on_press=self.newproject)
@@ -246,7 +247,7 @@ class ProjectOpened(Screen):
         popup = Popup(title=self.file.split("\\")[-1], content=popup_layout, size_hint=(None, None), size=(500, 300))
 
         for item in items:
-            btn = Button(text=item, size_hint=(None, None), size=(195, 50), color='lime')
+            btn = Button(text=str(item), size_hint=(None, None), size=(195, 50), color='lime')
             btn.bind(on_release=lambda btn_item: self.select_dropdown_item(btn_item, popup))
             dropdown.add_widget(btn)
 
@@ -323,7 +324,7 @@ class ProjectOpened(Screen):
         close_button.bind(on_release=popup.dismiss)
 
         for item in items:
-            btn = CustomButton(text=item, size_hint=(None, None), size=(195, 50), color='lime')
+            btn = CustomButton(text=str(item), size_hint=(None, None), size=(195, 50), color='lime')
             btn.bind(on_release=lambda btn_item: self.select_varnames(btn_item))
             dropdown.add_widget(btn)
 
@@ -339,7 +340,7 @@ class ProjectOpened(Screen):
         instance.color = 'red'
 
     def outliers(self, instance):
-        items = self.dms.data.columns
+        items = self.dms.data.select_dtypes(include=[int, float]).columns.tolist()
         popup_layout = BoxLayout(orientation='vertical', spacing=10)
         self.selected_var = Label(text="")
         dropdown = DropDown(pos_hint={'center_x': 0.5}, size_hint=(None, None), size=(200, 100))
@@ -354,7 +355,7 @@ class ProjectOpened(Screen):
         close_button.bind(on_release=popup.dismiss)
 
         for item in items:
-            btn = CustomButton(text=item, size_hint=(None, None), size=(195, 50), color='lime')
+            btn = CustomButton(text=str(item), size_hint=(None, None), size=(195, 50), color='lime')
             btn.bind(on_release=lambda btn_item: self.select_varnames(btn_item, one=True))
             dropdown.add_widget(btn)
 
@@ -367,7 +368,7 @@ class ProjectOpened(Screen):
         popup_layout.add_widget(popup_layout2)
 
         popup.open()
-        if self.varname!="":
+        if self.varname != "":
             instance.color = 'red'
 
     def select_varnames(self, btn, one=False):

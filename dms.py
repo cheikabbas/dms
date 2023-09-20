@@ -60,14 +60,16 @@ class Dms:
         pct_na = round(self.data.isna().mean()*100, 2)
         self.na = pd.DataFrame({"Nombre de valeurs manquantes": nb_na, "Pourcentage de valeurs manquantes": pct_na})
         five_pct = self.na[pct_na > 0.0].index.tolist()
+        self.operations.append("### VARIABLES CONTENANT DES VALEURS MANQUANTES ###")
         for name in five_pct:
-            op = f"-> La variable [{name}] contient des valeurs manquantes."
+            op = f"-> [{name}]"
             self.operations.append(op)
 
     def duplicates_check(self, varnames, popup):
         if len(varnames) > 0:
             self.duplicates = self.data[self.data.duplicated(subset=varnames, keep=False)]
             dups = self.duplicates.index.tolist()
+            self.operations.append("### DOUBLONS ###")
             for name in dups:
                 op = f"-> La ligne N°{name+1} est un doublon si on considère la(les) variable(s) {varnames}."
                 self.operations.append(op)
@@ -84,6 +86,7 @@ class Dms:
             upper_bound = Q3 + 1.5 * IQR
             self.outliers.append(self.data[(self.data[varname] < lower_bound) | (self.data[varname] > upper_bound)])
             outliers = pd.concat(self.outliers).index.tolist()
+            self.operations.append("### VALEURS ABBERANTES ###")
             for name in outliers:
                 op = f"-> La ligne N°{name+1} a une valeur abberante pour la variable [{varname}]."
                 self.operations.append(op)
