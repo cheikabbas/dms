@@ -6,6 +6,7 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from openpyxl.utils.dataframe import dataframe_to_rows
+import datetime
 
 
 class Dms:
@@ -22,7 +23,7 @@ class Dms:
         self.data = None
         self.outliers = []
         self.workbook = openpyxl.Workbook()
-        self.operations = ["#################### VARIABLES A VERIFIER ####################"]
+        self.operations = ["#################### VERIFICATIONS A FAIRE ####################"]
 
     # Create new project
     def create_project(self, chemin, nom_projet):
@@ -58,18 +59,20 @@ class Dms:
         nb_na = self.data.isna().sum()
         pct_na = round(self.data.isna().mean()*100, 2)
         self.na = pd.DataFrame({"Nombre de valeurs manquantes": nb_na, "Pourcentage de valeurs manquantes": pct_na})
-        five_pct = self.na[pct_na > 5.0].index.tolist()
+        five_pct = self.na[pct_na > 0.0].index.tolist()
         for name in five_pct:
-            op = f"-> {name} : plus de 5% de valeurs manquantes."
+            op = f"-> La variable [{name}] contient des valeurs manquantes."
             self.operations.append(op)
 
     def duplicates_check(self, varnames, popup):
         if len(varnames) > 0:
             self.duplicates = self.data[self.data.duplicated(subset=varnames, keep=False)]
-            #op = f"Vérification de doublons sur les variables {str(varnames)}."
-            #self.operations.append(op)
+            dups = self.duplicates.index.tolist()
+            for name in dups:
+                op = f"-> La ligne N°{name+1} est un doublon si on considère la(les) variable(s) {varnames}."
+                self.operations.append(op)
         else:
-            show_message("Sélection au moins une variable")
+            show_message("Sélectionner au moins une variable")
         popup.dismiss()
 
     def outliers_check(self, varname, popup):
@@ -80,8 +83,10 @@ class Dms:
             lower_bound = Q1 - 1.5 * IQR
             upper_bound = Q3 + 1.5 * IQR
             self.outliers.append(self.data[(self.data[varname] < lower_bound) | (self.data[varname] > upper_bound)])
-            #op = f"Vérification des valeurs abbérantes sur la variablea {str(varname)}."
-            #self.operations.append(op)
+            outliers = pd.concat(self.outliers).index.tolist()
+            for name in outliers:
+                op = f"-> La ligne N°{name+1} a une valeur abberante pour la variable [{varname}]."
+                self.operations.append(op)
             popup.dismiss()
         else:
             show_message("Selectionner une variable")
@@ -110,7 +115,8 @@ class Dms:
 
         self.write_corrections()
         try:
-            self.workbook.save(str(self.outputPath) + '/' + 'output.xlsx')
+            date_time = get_datetime()
+            self.workbook.save(str(self.outputPath) + '/' + 'output-' + date_time + '.xlsx')
             show_message("Exportation réussie!!")
         except:
             show_message("Fermer le fichier output avant de recommencer")
@@ -123,7 +129,8 @@ class Dms:
             self.workbook.remove(sheet)
 
     def write_corrections(self):
-        correction_file = str(self.correctionsPath) + '/' + "corrections.txt"
+        date_time = get_datetime()
+        correction_file = str(self.correctionsPath) + '/' + "corrections-" + date_time + ".txt"
         if os.path.exists(correction_file):
             with open(correction_file, 'a') as file:
                 for text in self.operations:
@@ -156,4 +163,10 @@ def show_message(msg):
     popup.open()
 
 
-
+def get_datetime():
+    """Retourne la date et l'heure pour nommer les fichiers"""
+    current_datetime = datetime.datetime.now()
+    # Format the new datetime
+    formatted_datetime = current_datetime.strftime("%d%m%Y-%H%M%S")
+    # Return the formatted datetime
+    return formatted_datetime
