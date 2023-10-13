@@ -15,7 +15,7 @@ from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.lang import Builder
 from dms import Dms
-from custom_widgets import CustomButton
+from custom_widgets import CustomButton, ChooseVar, ChVar
 
 kivy.require('2.1.1')
 
@@ -99,14 +99,18 @@ class NewProject(Screen):
                           pos_hint={'center_x': 0.5})
 
         button_create = Button(text="Créer", size_hint_y=None)
-        button_create.bind(on_press=self.createproject)
+        button_create.bind(on_press=lambda fun: self.createproject())
         button_back = Button(text="Retour", size_hint_y=None)
         button_back.bind(on_press=self.back)
+
+        self.home_button = Button(text="Accueil", size_hint=(None, None), width=200, height=50, pos_hint={'center_x': 0.5}, color='lime')
+        self.home_button.bind(on_release=lambda fun: self.back())
 
         my_box2 = BoxLayout()
 
         my_box1.add_widget(my_label1)
         my_box1.add_widget(self.file_choose)
+        my_box1.add_widget(self.home_button)
         my_box1.add_widget(my_grid)
         my_box2.add_widget(button_create)
         my_box2.add_widget(button_back)
@@ -289,9 +293,15 @@ class ProjectOpened(Screen):
         outliers.bind(on_release=lambda btn_item: self.outliers(instance=outliers))
         self.my_grid.add_widget(outliers)
 
+        # Home button
+        self.home_button = Button(text="Accueil", size_hint=(None, None), width=200, height=50, pos_hint={'center_x': 0.5}, color='lime')
+        self.home_button.bind(on_release=lambda fun: self.back())
+
+        # Export button
         self.button_export = Button(text="Exporter les resultats", size_hint_y=None, height=50, color='lime')
         self.button_export.bind(on_release=lambda btn_item: self.export())
 
+        # Renit button
         self.button_reinit = Button(text="Réinitialiser tout", size_hint_y=None, height=50, color='lime')
         self.button_reinit.bind(on_release=lambda btn_item: self.reinit())
 
@@ -301,8 +311,12 @@ class ProjectOpened(Screen):
 
         self.my_box1.add_widget(self.my_label1)
         self.my_box1.add_widget(self.my_grid)
+        self.my_box1.add_widget(self.home_button)
         self.my_box1.add_widget(my_box)
         self.add_widget(self.my_box1)
+
+    def back(self):
+        self.manager.current = 'home'
 
     def missings(self, instance):
         self.dms.missing_count()
@@ -335,8 +349,9 @@ class ProjectOpened(Screen):
         popup_layout.add_widget(self.selected_var)
         popup_layout.add_widget(dropdown)
         popup_layout.add_widget(popup_layout2)
-
+        #
         popup.open()
+        # ChVar(items, text="Choisir des variables").run()
         instance.color = 'red'
 
     def outliers(self, instance):
