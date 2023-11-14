@@ -57,7 +57,7 @@ class Dms:
 
     def missing_count(self):
         nb_na = self.data.isna().sum()
-        pct_na = round(self.data.isna().mean()*100, 2)
+        pct_na = round(self.data.isna().mean() * 100, 2)
         self.na = pd.DataFrame({"Nombre de valeurs manquantes": nb_na, "Pourcentage de valeurs manquantes": pct_na})
         five_pct = self.na[pct_na > 0.0].index.tolist()
         self.operations.append("### VARIABLES CONTENANT DES VALEURS MANQUANTES ###")
@@ -71,7 +71,7 @@ class Dms:
             dups = self.duplicates.index.tolist()
             self.operations.append("### DOUBLONS ###")
             for name in dups:
-                op = f"-> La ligne N°{name+1} est un doublon si on considère la(les) variable(s) {varnames}."
+                op = f"-> La ligne N°{name + 1} est un doublon si on considère la(les) variable(s) {varnames}."
                 self.operations.append(op)
         else:
             show_message("Sélectionner au moins une variable")
@@ -79,50 +79,53 @@ class Dms:
 
     def outliers_check(self, varname, popup):
         if varname is not None:
-            Q1 = self.data[varname].quantile(0.25)
-            Q3 = self.data[varname].quantile(0.75)
-            IQR = Q3 - Q1
-            lower_bound = Q1 - 1.5 * IQR
-            upper_bound = Q3 + 1.5 * IQR
+            q1 = self.data[varname].quantile(0.25)
+            q3 = self.data[varname].quantile(0.75)
+            iqr = q3 - q1
+            lower_bound = q1 - 1.5 * iqr
+            upper_bound = q3 + 1.5 * iqr
             self.outliers.append(self.data[(self.data[varname] < lower_bound) | (self.data[varname] > upper_bound)])
             outliers = pd.concat(self.outliers).index.tolist()
             self.operations.append("### VALEURS ABBERANTES ###")
             for name in outliers:
-                op = f"-> La ligne N°{name+1} a une valeur abberante pour la variable [{varname}]."
+                op = f"-> La ligne N°{name + 1} a une valeur abberante pour la variable [{varname}]."
                 self.operations.append(op)
             popup.dismiss()
         else:
-            show_message("Selectionner une variable")
+            show_message("Sélectionner une variable")
 
     def export_output(self):
-        self.workbook.create_sheet("Valeurs manquantes")
-        worksheet = self.workbook["Valeurs manquantes"]
-        if self.na is not None:
-            for row in dataframe_to_rows(self.na):
-                worksheet.append(row)
-        worksheet.delete_rows(2)
+        if (self.na is None) and (self.duplicates is None) and (len(self.outliers) == 0):
+            show_message("Aucun résultat à exporter")
+        else:
+            self.workbook.create_sheet("Valeurs manquantes")
+            worksheet = self.workbook["Valeurs manquantes"]
+            if self.na is not None:
+                for row in dataframe_to_rows(self.na):
+                    worksheet.append(row)
+            worksheet.delete_rows(2)
 
-        self.workbook.create_sheet("Doublons")
-        worksheet = self.workbook["Doublons"]
-        if self.duplicates is not None:
-            for row in dataframe_to_rows(self.duplicates):
-                worksheet.append(row)
-        worksheet.delete_rows(2)
+            self.workbook.create_sheet("Doublons")
+            worksheet = self.workbook["Doublons"]
+            if self.duplicates is not None:
+                for row in dataframe_to_rows(self.duplicates):
+                    worksheet.append(row)
+            worksheet.delete_rows(2)
 
-        self.workbook.create_sheet("Valeurs abbérantes")
-        worksheet = self.workbook["Valeurs abbérantes"]
-        if len(self.outliers) > 0:
-            for row in dataframe_to_rows(pd.concat(self.outliers), header=True):
-                worksheet.append(row)
-        worksheet.delete_rows(2)
+            self.workbook.create_sheet("Valeurs abbérantes")
+            worksheet = self.workbook["Valeurs abbérantes"]
+            if len(self.outliers) > 0:
+                for row in dataframe_to_rows(pd.concat(self.outliers), header=True):
+                    worksheet.append(row)
+            worksheet.delete_rows(2)
 
-        self.write_corrections()
-        try:
-            date_time = get_datetime()
-            self.workbook.save(str(self.outputPath) + '/' + 'output-' + date_time + '.xlsx')
-            show_message("Exportation réussie!!")
-        except:
-            show_message("Fermer le fichier output avant de recommencer")
+            self.write_corrections()
+            try:
+                date_time = get_datetime()
+                self.workbook.save(str(self.outputPath) + '/' + 'output-' + date_time + '.xlsx')
+                show_message("Exportation réussie!!")
+            except:
+                show_message("Fermer le fichier output avant de recommencer")
 
     def reinit(self):
         self.na = None

@@ -1,10 +1,10 @@
 import os
-
 import kivy
 from kivy.app import App
 from kivy.uix.dropdown import DropDown
 from kivy.uix.filechooser import FileChooserIconView
 from kivy.uix.gridlayout import GridLayout
+from kivy.uix.image import Image
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.boxlayout import BoxLayout
@@ -13,7 +13,7 @@ from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.lang import Builder
 from dms import Dms
-from custom_widgets import CustomButton, ChooseVar, ChVar
+from custom_widgets import CustomButton
 
 kivy.require('2.1.1')
 
@@ -49,6 +49,8 @@ class HomeScreen(Screen):
 
         dms_label = Label(text="OUTIL DE CONTROLE QUALITE DE DONNEES", font_size='24dp', color="lime")
 
+        img = Image(source='images/img.png', size_hint=(1, 1))
+
         new_project = Button(text="Créer un project", size_hint_y=None)
         new_project.bind(on_press=self.newproject)
         open_project = Button(text="Ouvrir un projet", size_hint_y=None)
@@ -59,6 +61,7 @@ class HomeScreen(Screen):
         my_box2.add_widget(open_project)
 
         my_box1.add_widget(dms_label)
+        my_box1.add_widget(img)
         my_box1.add_widget(my_box2)
         self.add_widget(my_box1)
 
