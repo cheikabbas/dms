@@ -1,9 +1,7 @@
 import os
-from pathlib import Path
 
 import kivy
 from kivy.app import App
-from kivy.uix.actionbar import ActionButton
 from kivy.uix.dropdown import DropDown
 from kivy.uix.filechooser import FileChooserIconView
 from kivy.uix.gridlayout import GridLayout
@@ -266,8 +264,7 @@ class ProjectOpened(Screen):
         selected_item = btn.text
         self.dms.load_data(fichier=self.file, sheet_name=selected_item)
         popup.dismiss()
-        show_message(
-            f"La base de données contient {self.dms.data.shape[0]} lignes et {self.dms.data.shape[1]} colonnes.")
+        show_message(f"La base de données contient {self.dms.data.shape[0]} lignes et {self.dms.data.shape[1]} colonnes.")
         self.ids.layout1.clear_widgets()
         self.populate_screen(selected_item)
 
@@ -419,6 +416,7 @@ class ProjectOpened(Screen):
 class TestApp(App):
 
     def build(self):
+        self.icon = 'images/icon.png'
         my_screenmanager = ScreenManager()
         home = HomeScreen(name='home')
         projectOpened = ProjectOpened(name="projectopened")
