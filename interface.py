@@ -170,7 +170,7 @@ class OpenProject(Screen):
 
         my_box1 = BoxLayout(orientation='vertical')
 
-        self.my_label1 = Label(text="Ouvrir le dossier du projet",
+        self.my_label1 = Label(text="Ouvrir le dossier du project",
                                font_size='24dp', color='lime')
 
         self.file_choose = FileChooserIconView(path='/', filters=['*.txt', '*.xlsx'])
@@ -213,12 +213,13 @@ class OpenProject(Screen):
         try:
             self.chemin = str(self.file_choose.path)
         except:
-            pass
+            pass 
 
 
 class ProjectOpened(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.home_button = None
         self.varname = None
         self.my_grid = None
         self.my_box1 = None
@@ -420,6 +421,7 @@ class TestApp(App):
 
     def build(self):
         self.icon = 'images/icon.png'
+        self.title = 'Data quality check'
         my_screenmanager = ScreenManager()
         home = HomeScreen(name='home')
         projectOpened = ProjectOpened(name="projectopened")

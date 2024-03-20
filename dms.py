@@ -1,3 +1,5 @@
+import shutil
+
 import pandas as pd
 import os
 import openpyxl
@@ -8,9 +10,11 @@ from kivy.uix.popup import Popup
 from openpyxl.utils.dataframe import dataframe_to_rows
 import datetime
 
+from messageBoxes import show_critical_messagebox, show_info_messagebox
+
 
 class Dms:
-    """Cette classe a des fonctions pour vérifier la qualité des données lors d'une colloecte de données"""
+    """Cette classe a des fonctions pour vérifier la qualité des données lors d'une collecte de données"""
 
     def __init__(self):
         self.duplicates = None
@@ -26,15 +30,26 @@ class Dms:
         self.operations = ["#################### VERIFICATIONS A FAIRE ####################"]
 
     # Create new project
-    def create_project(self, chemin, nom_projet):
+    def create_project(self, chemin, nom_projet, data):
         """Crée un projet de suivi de la qualité des données"""
         self.globalPath = os.path.join(chemin, nom_projet)
         if not os.path.exists(self.globalPath):
             os.makedirs(self.globalPath)
-            for i in ["data", "output"]:
+            file_config = os.path.join(self.globalPath, "config.dms")
+            with open(file_config, "x") as f:
+                f.write(f"Created on {get_datetime()}\n")
+                f.write(self.globalPath)
+            for i in ["data", "output", "corrections"]:
                 os.makedirs(os.path.join(self.globalPath, i))
             self.dataPath = os.path.join(self.globalPath, "data")
             self.outputPath = os.path.join(self.globalPath, "output")
+            self.correctionsPath = os.path.join(self.globalPath, "corrections")
+
+            try:
+                shutil.copy(data, self.dataPath)
+            except IOError as e:
+                show_critical_messagebox("Impossible de copier le fichier de données. " + e)
+
             return "Projet créé avec succès! Copier le fichier le données dans le dossier 'data' créé pour continuer."
         return "Dossier existe déjà."
 
@@ -46,7 +61,8 @@ class Dms:
         self.correctionsPath = os.path.join(self.globalPath, "corrections")
 
     # Get Sheets names of Excel file
-    def getsheetsnames(self, file):
+    @staticmethod
+    def getsheetsnames(file):
         workbook = openpyxl.load_workbook(file)
         sheet_names = workbook.sheetnames
         return sheet_names
@@ -56,7 +72,7 @@ class Dms:
         self.data = pd.read_excel(fichier, sheet_name=sheet_name)
 
     def missing_count(self):
-        nb_na = self.data.isna().sum()
+        nb_na = self.data.isnull().sum()
         pct_na = round(self.data.isna().mean() * 100, 2)
         self.na = pd.DataFrame({"Nombre de valeurs manquantes": nb_na, "Pourcentage de valeurs manquantes": pct_na})
         five_pct = self.na[pct_na > 0.0].index.tolist()
@@ -64,6 +80,7 @@ class Dms:
         for name in five_pct:
             op = f"-> [{name}]"
             self.operations.append(op)
+        show_info_messagebox("Le comptage de valeurs manquantes a été effetué avec succès.")
 
     def duplicates_check(self, varnames, popup):
         if len(varnames) > 0:

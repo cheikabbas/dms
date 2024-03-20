@@ -1,15 +1,18 @@
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget, QScrollArea, QDialog
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
-from kivy.uix.screenmanager import Screen, ScreenManager
+from kivy.uix.screenmanager import Screen
 from kivy.uix.scrollview import ScrollView
 
 
-class CustomButton(Button):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+class CustomButton(QPushButton):
+    def __init__(self, label):
+        super().__init__()
+        self.setText(label)
         self.click_count = 0
 
     def nbclick_add(self):
@@ -69,14 +72,52 @@ class ChooseVar(Screen):
                 btn.nbclick_rem()
 
 
-class ChVar(App):
+class CustomPopup(QDialog):
+    def __init__(self, button_labels, todo, affaire):
+        super(CustomPopup, self).__init__()
+        self.selected_var = None
+        self.setWindowTitle(todo)
+        self.resize(350, 100)
+        self.setLayout(QVBoxLayout())
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)  # Allow the scroll area to resize its content
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)  # Show vertical scroll bar as needed
 
-    def __init__(self, items, text="", **kwargs):
-        self.items = items
-        self.text = text
+        self.scroll_content = QWidget()
+        self.scroll_content.setLayout(QVBoxLayout())
 
-    def build(self):
-        my_screenmanager = ScreenManager()
-        home = ChooseVar(items=self.items, text=self.text, name='home')
-        my_screenmanager.add_widget(home)
-        return my_screenmanager
+        self.ok_button = QPushButton("Valider")
+        self.ok_button.setGeometry(50, 40, 100, 25)
+        self.ok_button.clicked.connect(self.accept)
+
+        self.create_buttons(button_labels)
+
+        self.scroll_area.setWidget(self.scroll_content)
+        self.layout().addWidget(self.scroll_area)
+        self.layout().addWidget(self.ok_button)
+        self.sheet = None
+        self.affaire = affaire
+        self.create_buttons(button_labels)
+        self.exec_()
+
+    def button_clicked(self):
+        if self.affaire == "F":
+            if self.sender().click_count == 0:
+                self.sheet = self.sender().text()
+                self.sender().setStyleSheet("background-color: red;")
+                self.sender().nbclick_add()
+            else:
+                self.sheet = None
+                self.sender().setStyleSheet("background-color: #f0f0f0;")
+                self.sender().nbclick_rem()
+        # elif self.affaire == "V1":
+        #     self.selected_var = self.sender().text()
+        # else:
+        #     var = self.sender().text()
+        #     self.selected_vars.append(var)
+
+    def create_buttons(self, button_labels):
+        for label in button_labels:
+            button = CustomButton(label)
+            button.clicked.connect(self.button_clicked)
+            self.scroll_content.layout().addWidget(button)
