@@ -1,6 +1,7 @@
 import shutil
 
 import pandas as pd
+import pyreadstat
 import os
 import openpyxl
 from kivy.uix.boxlayout import BoxLayout
@@ -10,7 +11,8 @@ from kivy.uix.popup import Popup
 from openpyxl.utils.dataframe import dataframe_to_rows
 import datetime
 
-from messageBoxes import show_critical_messagebox, show_info_messagebox
+from custom_widgets import ResultData
+from messageBoxes import show_critical_messagebox, show_info_messagebox, show_warning_messagebox
 
 
 class Dms:
@@ -74,15 +76,16 @@ class Dms:
     def missing_count(self):
         nb_na = self.data.isnull().sum()
         pct_na = round(self.data.isna().mean() * 100, 2)
-        self.na = pd.DataFrame({"Nombre de valeurs manquantes": nb_na, "Pourcentage de valeurs manquantes": pct_na})
+        self.na = pd.DataFrame({"NB Valeurs manquantes": nb_na, "% Valeurs manquantes": pct_na})
+        self.na.insert(loc=0, column='Variable', value=self.na.index)
         five_pct = self.na[pct_na > 0.0].index.tolist()
         self.operations.append("### VARIABLES CONTENANT DES VALEURS MANQUANTES ###")
         for name in five_pct:
             op = f"-> [{name}]"
             self.operations.append(op)
-        show_info_messagebox("Le comptage de valeurs manquantes a été effetué avec succès.")
+        ResultData(self.na, "Valeurs manquantes")
 
-    def duplicates_check(self, varnames, popup):
+    def duplicates_check(self, varnames):
         if len(varnames) > 0:
             self.duplicates = self.data[self.data.duplicated(subset=varnames, keep=False)]
             dups = self.duplicates.index.tolist()
@@ -90,11 +93,9 @@ class Dms:
             for name in dups:
                 op = f"-> La ligne N°{name + 1} est un doublon si on considère la(les) variable(s) {varnames}."
                 self.operations.append(op)
-        else:
-            show_message("Sélectionner au moins une variable")
-        popup.dismiss()
+            ResultData(self.duplicates, "Doublons")
 
-    def outliers_check(self, varname, popup):
+    def outliers_check(self, varname):
         if varname is not None:
             q1 = self.data[varname].quantile(0.25)
             q3 = self.data[varname].quantile(0.75)
@@ -102,14 +103,12 @@ class Dms:
             lower_bound = q1 - 1.5 * iqr
             upper_bound = q3 + 1.5 * iqr
             self.outliers.append(self.data[(self.data[varname] < lower_bound) | (self.data[varname] > upper_bound)])
-            outliers = pd.concat(self.outliers).index.tolist()
+            self.outliers = pd.concat(self.outliers)
             self.operations.append("### VALEURS ABBERANTES ###")
-            for name in outliers:
+            for name in self.outliers.index.tolist():
                 op = f"-> La ligne N°{name + 1} a une valeur abberante pour la variable [{varname}]."
                 self.operations.append(op)
-            popup.dismiss()
-        else:
-            show_message("Sélectionner une variable")
+            ResultData(self.dms.outliers, "Valeurs aberrantes")
 
     def export_output(self):
         if (self.na is None) and (self.duplicates is None) and (len(self.outliers) == 0):
@@ -164,6 +163,14 @@ class Dms:
                 for text in self.operations:
                     file.write(text)
                     file.write('\n')
+
+    def export_data(self, format):
+        if format == "CSV":
+            self.data.to_csv(self.dataPath + '/donnees.csv', index=False)
+        if format == "Stata":
+            self.data.to_stata(self.dataPath + '/donnees.dta', version=119)
+        if format == "SPSS":
+            pyreadstat.write_sav(self.data, self.dataPath + '/donnees.sav')
 
 
 def show_message(msg):
