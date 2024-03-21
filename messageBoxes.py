@@ -15,7 +15,7 @@ def show_info_messagebox(text):
     msg.setStandardButtons(QMessageBox.Ok)
 
     # start the app
-    retval = msg.exec_()
+    msg.exec_()
 
 
 def show_warning_messagebox(text):
@@ -32,7 +32,7 @@ def show_warning_messagebox(text):
     msg.setStandardButtons(QMessageBox.Ok)
 
     # start the app
-    retval = msg.exec_()
+    msg.exec_()
 
 
 def show_question_messagebox(text):
@@ -49,7 +49,7 @@ def show_question_messagebox(text):
     msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
 
     # start the app
-    retval = msg.exec_()
+    msg.exec_()
 
 
 def show_critical_messagebox(text):
@@ -66,4 +66,4 @@ def show_critical_messagebox(text):
     msg.setStandardButtons(QMessageBox.Ok)
 
     # start the app
-    retval = msg.exec_()
+    msg.exec_()

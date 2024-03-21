@@ -1,18 +1,14 @@
+import datetime
+import os
 import shutil
 
+import openpyxl
 import pandas as pd
 import pyreadstat
-import os
-import openpyxl
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.button import Button
-from kivy.uix.label import Label
-from kivy.uix.popup import Popup
 from openpyxl.utils.dataframe import dataframe_to_rows
-import datetime
 
 from custom_widgets import ResultData
-from messageBoxes import show_critical_messagebox, show_info_messagebox, show_warning_messagebox
+from messageBoxes import show_critical_messagebox, show_info_messagebox
 
 
 class Dms:
@@ -108,11 +104,11 @@ class Dms:
             for name in self.outliers.index.tolist():
                 op = f"-> La ligne N°{name + 1} a une valeur abberante pour la variable [{varname}]."
                 self.operations.append(op)
-            ResultData(self.dms.outliers, "Valeurs aberrantes")
+            ResultData(self.outliers, "Valeurs aberrantes")
 
     def export_output(self):
-        if (self.na is None) and (self.duplicates is None) and (len(self.outliers) == 0):
-            show_message("Aucun résultat à exporter")
+        if (self.na is None) and (self.duplicates is None) and (self.outliers is None):
+            show_info_messagebox("Aucun résultat à exporter")
         else:
             self.workbook.create_sheet("Valeurs manquantes")
             worksheet = self.workbook["Valeurs manquantes"]
@@ -131,7 +127,7 @@ class Dms:
             self.workbook.create_sheet("Valeurs abbérantes")
             worksheet = self.workbook["Valeurs abbérantes"]
             if len(self.outliers) > 0:
-                for row in dataframe_to_rows(pd.concat(self.outliers), header=True):
+                for row in dataframe_to_rows(self.outliers, header=True):
                     worksheet.append(row)
             worksheet.delete_rows(2)
 
@@ -139,9 +135,9 @@ class Dms:
             try:
                 date_time = get_datetime()
                 self.workbook.save(str(self.outputPath) + '/' + 'output-' + date_time + '.xlsx')
-                show_message("Exportation réussie!!")
-            except:
-                show_message("Fermer le fichier output avant de recommencer")
+                show_info_messagebox("Exportation réussie!!")
+            except IOError:
+                show_info_messagebox("Fermer le fichier output avant de recommencer")
 
     def reinit(self):
         self.na = None
@@ -164,33 +160,13 @@ class Dms:
                     file.write(text)
                     file.write('\n')
 
-    def export_data(self, format):
-        if format == "CSV":
+    def export_data(self, frmt):
+        if frmt == "CSV":
             self.data.to_csv(self.dataPath + '/donnees.csv', index=False)
-        if format == "Stata":
+        if frmt == "Stata":
             self.data.to_stata(self.dataPath + '/donnees.dta', version=119)
-        if format == "SPSS":
+        if frmt == "SPSS":
             pyreadstat.write_sav(self.data, self.dataPath + '/donnees.sav')
-
-
-def show_message(msg):
-    # Create a Popup with a Label and an "OK" button
-    content = BoxLayout(orientation='vertical', spacing=10)
-    message_label = Label(text=msg)
-    ok_button = Button(text="OK")
-
-    # Create the Popup widget
-    popup = Popup(title="Message", content=content, size_hint=(None, None), size=(1000, 200))
-
-    # Bind the "OK" button to close the Popup
-    ok_button.bind(on_release=popup.dismiss)
-
-    # Add the Label and Button to the Popup's content
-    content.add_widget(message_label)
-    content.add_widget(ok_button)
-
-    # Open the Popup
-    popup.open()
 
 
 def get_datetime():

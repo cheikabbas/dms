@@ -1,5 +1,4 @@
 import os
-import sys
 
 from PyQt5.QtWidgets import QApplication, QFileDialog, QWidget, QMainWindow
 from PyQt5.uic import loadUi
@@ -95,6 +94,7 @@ class ProjectOpened(QWidget):
         self.duplicates_btn.clicked.connect(self.duplicate)
         self.data_table_btn.clicked.connect(self.show_data)
         self.export_data_btn.clicked.connect(self.exportdata)
+        self.export_res_btn.clicked.connect(self.exportoutput)
         self.label.setText(f'Nom du projet : {str(self.dms.globalPath).split("/")[-1]}')
         self.loaded_data = False
         self.disable_btn()
@@ -117,7 +117,7 @@ class ProjectOpened(QWidget):
                     self.ope.setText(self.ope.toPlainText() + "\n-> Chargement de données")
                     show_info_messagebox(
                         f"Données importées avec succès. Il y a {self.dms.data.shape[0]} lignes et {self.dms.data.shape[1]} colonnes dans la base de données")
-        except:
+        except Exception:
             pass
 
     def missing(self):
@@ -126,11 +126,11 @@ class ProjectOpened(QWidget):
 
     def duplicate(self):
         variables = self.dms.data.columns
-        vars = CustomPopup(variables, "Choisir les variables", "VX")
-        self.dms.duplicates_check(vars.selected_vars)
-        if len(vars.selected_vars) > 0:
+        choosedvars = CustomPopup(variables, "Choisir les variables", "VX")
+        self.dms.duplicates_check(choosedvars.selected_vars)
+        if len(choosedvars.selected_vars) > 0:
             self.ope.setText(
-                self.ope.toPlainText() + f"\n-> Détection de doublons sur les variables {str(vars.selected_vars)}")
+                self.ope.toPlainText() + f"\n-> Détection de doublons sur les variables {str(choosedvars.selected_vars)}")
 
     def outliers(self):
         variables = self.dms.data.columns
@@ -146,14 +146,20 @@ class ProjectOpened(QWidget):
 
     def exportdata(self):
         formats = ['CSV', 'Stata', 'SPSS']
-        format = CustomPopup(formats, "Choisir le format d'exportation", "V1")
-        self.dms.export_data(format.selected_var)
-        if format.selected_var == "Stata":
-            show_info_messagebox(f"Données exportées au format {format.selected_var} avec succès.\nCe format est supporté par Stata 15 et plus.")
-            self.ope.setText(self.ope.toPlainText() + f"\n-> Exportation de base de données au format {format.selected_var}")
-        if format.selected_var == "CSV" or format.selected_var == "SPSS":
-            show_info_messagebox(f"Données exportées au format {format.selected_var} avec succès.")
-            self.ope.setText(self.ope.toPlainText() + f"\n-> Exportation de base de données au format {format.selected_var}")
+        frmt = CustomPopup(formats, "Choisir le format d'exportation", "V1")
+        self.dms.export_data(frmt.selected_var)
+        if frmt.selected_var == "Stata":
+            show_info_messagebox(
+                f"Données exportées au format {frmt.selected_var} avec succès.\nCe format est supporté par Stata 15 et plus.")
+            self.ope.setText(
+                self.ope.toPlainText() + f"\n-> Exportation de base de données au format {frmt.selected_var}")
+        if frmt.selected_var == "CSV" or frmt.selected_var == "SPSS":
+            show_info_messagebox(f"Données exportées au format {frmt.selected_var} avec succès.")
+            self.ope.setText(
+                self.ope.toPlainText() + f"\n-> Exportation de base de données au format {frmt.selected_var}")
+
+    def exportoutput(self):
+        self.dms.export_output()
 
     def disable_btn(self):
         self.duplicates_btn.setEnabled(self.loaded_data)
@@ -175,15 +181,3 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.page1 = Home()
         self.setCentralWidget(self.page1)
-
-
-class Popup():
-    pass
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.resize(930, 600)
-    window.show()
-    sys.exit(app.exec_())
