@@ -8,7 +8,7 @@ import pyreadstat
 from openpyxl.utils.dataframe import dataframe_to_rows
 
 from custom_widgets import ResultData
-from messageBoxes import show_critical_messagebox, show_info_messagebox
+from messageBoxes import show_critical_messagebox, show_info_messagebox, show_warning_messagebox
 
 
 class Dms:
@@ -167,6 +167,26 @@ class Dms:
             self.data.to_stata(self.dataPath + '/donnees.dta', version=119)
         if frmt == "SPSS":
             pyreadstat.write_sav(self.data, self.dataPath + '/donnees.sav')
+
+    def na_correction(self, method, var, fillvalue=None):
+        if method == 'Supprimer':
+            self.drop_na(var)
+            show_info_messagebox(f"Données manquantes supprimées pour la variable {var}.")
+        if method == "Remplacer":
+            self.replace_na(var, fillvalue)
+            show_info_messagebox(f"Données manquantes remplacées par {fillvalue} pour la variable {var}.")
+
+    def drop_na(self, var):
+        if var is not None:
+            self.data.dropna(subset=[var], inplace=True)
+        else:
+            show_critical_messagebox("Indiquer la variable")
+
+    def replace_na(self, var, fillvalue):
+        if var is not None and fillvalue is not None:
+            self.data[var].fillna(fillvalue, inplace=True)
+        else:
+            show_warning_messagebox("Indiquer la variable et la valeur de remplacement correctement.")
 
 
 def get_datetime():

@@ -95,6 +95,7 @@ class ProjectOpened(QWidget):
         self.data_table_btn.clicked.connect(self.show_data)
         self.export_data_btn.clicked.connect(self.exportdata)
         self.export_res_btn.clicked.connect(self.exportoutput)
+        self.correct_na_btn.clicked.connect(self.corrections_na)
         self.label.setText(f'Nom du projet : {str(self.dms.globalPath).split("/")[-1]}')
         self.loaded_data = False
         self.disable_btn()
@@ -160,6 +161,16 @@ class ProjectOpened(QWidget):
 
     def exportoutput(self):
         self.dms.export_output()
+
+    def corrections_na(self):
+        methods = ["Supprimer", "Remplacer"]
+        variables = self.dms.data.columns
+        method = CustomPopup(methods, "Choisir la méthode à appliquer", "V1")
+        if method.selected_var == "Supprimer":
+            var = CustomPopup(variables, "Choisir une variable", "V1")
+            self.dms.na_correction(method.selected_var, var.selected_var)
+            self.ope.setText(
+                self.ope.toPlainText() + f"\n-> Suppression des valeurs manquantes pour la variable {var.selected_var}")
 
     def disable_btn(self):
         self.duplicates_btn.setEnabled(self.loaded_data)
