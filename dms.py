@@ -107,7 +107,7 @@ class Dms:
             ResultData(self.outliers, "Valeurs aberrantes")
 
     def export_output(self):
-        if (self.na is None) and (self.duplicates is None) and (self.outliers is None):
+        if (self.na is None) and (self.duplicates is None) and (len(self.outliers) == 0):
             show_info_messagebox("Aucun résultat à exporter")
         else:
             self.workbook.create_sheet("Valeurs manquantes")

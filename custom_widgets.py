@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget, QScrollArea, QDialog, QApplication
+from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget, QScrollArea, QDialog, QApplication, QLineEdit
 from PyQt5.uic import loadUi
 
 from messageBoxes import show_info_messagebox
@@ -24,6 +24,7 @@ class CustomPopup(QDialog):
         super(CustomPopup, self).__init__()
         self.selected_var = None
         self.selected_vars = []
+        self.buttons = []
         self.setWindowTitle(todo)
         self.resize(350, 100)
         self.setLayout(QVBoxLayout())
@@ -41,11 +42,18 @@ class CustomPopup(QDialog):
         self.create_buttons(button_labels)
 
         self.scroll_area.setWidget(self.scroll_content)
+
+        self.search_field = QLineEdit()
+        self.search_field.setPlaceholderText("Rechercher")
+        self.search_field.textChanged.connect(self.filter_buttons)
+
+        self.layout().addWidget(self.search_field)
         self.layout().addWidget(self.scroll_area)
         self.layout().addWidget(self.ok_button)
+
         self.sheet = None
         self.affaire = affaire
-        self.create_buttons(button_labels)
+
         self.exec_()
 
     def button_clicked(self):
@@ -84,6 +92,14 @@ class CustomPopup(QDialog):
             button = CustomButton(label)
             button.clicked.connect(self.button_clicked)
             self.scroll_content.layout().addWidget(button)
+            self.buttons.append(button)
+
+    def filter_buttons(self, text):
+        for button in self.buttons:
+            if text.lower() in button.text().lower():
+                button.setVisible(True)
+            else:
+                button.setVisible(False)
 
 
 class ResultText(QDialog):
