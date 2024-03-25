@@ -3,7 +3,7 @@ import os
 from PyQt5.QtWidgets import QApplication, QFileDialog, QWidget, QMainWindow
 from PyQt5.uic import loadUi
 
-from custom_widgets import CustomPopup, ResultData
+from custom_widgets import CustomPopup, ResultData, SampleView1
 from dms import Dms
 from messageBoxes import show_info_messagebox, show_warning_messagebox
 
@@ -96,6 +96,7 @@ class ProjectOpened(QWidget):
         self.export_data_btn.clicked.connect(self.exportdata)
         self.export_res_btn.clicked.connect(self.exportoutput)
         self.correct_na_btn.clicked.connect(self.corrections_na)
+        self.sampling_btn.clicked.connect(self.sample_data)
         self.label.setText(f'Nom du projet : {str(self.dms.globalPath).split("/")[-1]}')
         self.loaded_data = False
         self.disable_btn()
@@ -168,9 +169,25 @@ class ProjectOpened(QWidget):
         method = CustomPopup(methods, "Choisir la méthode à appliquer", "V1")
         if method.selected_var == "Supprimer":
             var = CustomPopup(variables, "Choisir une variable", "V1")
-            self.dms.na_correction(method.selected_var, var.selected_var)
+            if var.selected_var is not None:
+                self.dms.na_correction(method.selected_var, var.selected_var)
+                self.ope.setText(
+                    self.ope.toPlainText() + f"\n-> Suppression des valeurs manquantes pour la variable {var.selected_var}")
+        if method.selected_var == "Remplacer":
+            var = CustomPopup(variables, "Choisir une variable", "V1", fillvalue=True)
+            if var.selected_var is not None:
+                if var.valeur is not None:
+                    self.dms.na_correction(method.selected_var, var.selected_var, var.valeur)
+                    self.ope.setText(
+                        self.ope.toPlainText() + f"\n-> Remplacement des valeurs manquantes pour la variable {var.selected_var} par {var.valeur}")
+
+    def sample_data(self):
+        ssize = SampleView1(self.dms.data.shape[0], str(self.dms.outputPath+'/sample.xlsx'), self.dms.sample_df)
+        if ssize.ssize is not None:
+            self.dms.sample_data(ssize.ssize)
+            ResultData(self.dms.sample_df, "Echantillon")
             self.ope.setText(
-                self.ope.toPlainText() + f"\n-> Suppression des valeurs manquantes pour la variable {var.selected_var}")
+                        self.ope.toPlainText() + f"\n-> Echantillonnage de {ssize.ssize} lignes.")
 
     def disable_btn(self):
         self.duplicates_btn.setEnabled(self.loaded_data)

@@ -24,6 +24,7 @@ class Dms:
         self.filesList = []
         self.data = None
         self.outliers = []
+        self.sample_df = None
         self.workbook = openpyxl.Workbook()
         self.operations = ["#################### VERIFICATIONS A FAIRE ####################"]
 
@@ -170,8 +171,9 @@ class Dms:
 
     def na_correction(self, method, var, fillvalue=None):
         if method == 'Supprimer':
-            self.drop_na(var)
-            show_info_messagebox(f"Données manquantes supprimées pour la variable {var}.")
+            if var is not None:
+                self.drop_na(var)
+                show_info_messagebox(f"Données manquantes supprimées pour la variable {var}.")
         if method == "Remplacer":
             self.replace_na(var, fillvalue)
             show_info_messagebox(f"Données manquantes remplacées par {fillvalue} pour la variable {var}.")
@@ -188,6 +190,10 @@ class Dms:
         else:
             show_warning_messagebox("Indiquer la variable et la valeur de remplacement correctement.")
 
+    def sample_data(self, n):
+        if n is not None:
+            self.sample_df = self.data.sample(n)
+            show_info_messagebox(f"Echantillonnage éffectué avec succès. {n} lignes ont été tirées aléatoirement de la base de données.")
 
 def get_datetime():
     """Retourne la date et l'heure pour nommer les fichiers"""

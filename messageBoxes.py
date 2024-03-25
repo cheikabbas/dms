@@ -26,7 +26,7 @@ def show_warning_messagebox(text):
     msg.setText(text)
 
     # setting Message box window title
-    msg.setWindowTitle("Warning MessageBox")
+    msg.setWindowTitle("Attention")
 
     # declaring buttons on Message Box
     msg.setStandardButtons(QMessageBox.Ok)
@@ -43,7 +43,7 @@ def show_question_messagebox(text):
     msg.setText(text)
 
     # setting Message box window title
-    msg.setWindowTitle("Question MessageBox")
+    msg.setWindowTitle("Question")
 
     # declaring buttons on Message Box
     msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
@@ -60,7 +60,7 @@ def show_critical_messagebox(text):
     msg.setText(text)
 
     # setting Message box window title
-    msg.setWindowTitle("Critical MessageBox")
+    msg.setWindowTitle("Erreur")
 
     # declaring buttons on Message Box
     msg.setStandardButtons(QMessageBox.Ok)

@@ -1,9 +1,10 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget, QScrollArea, QDialog, QApplication, QLineEdit
+from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget, QScrollArea, QDialog, QApplication, QLineEdit, QSpinBox, \
+    QHBoxLayout, QLabel
 from PyQt5.uic import loadUi
 
-from messageBoxes import show_info_messagebox
+from messageBoxes import show_info_messagebox, show_warning_messagebox
 
 
 class CustomButton(QPushButton):
@@ -20,28 +21,37 @@ class CustomButton(QPushButton):
 
 
 class CustomPopup(QDialog):
-    def __init__(self, button_labels, todo, affaire):
+    def __init__(self, button_labels, todo, affaire, fillvalue=False):
         super(CustomPopup, self).__init__()
         self.selected_var = None
         self.selected_vars = []
         self.buttons = []
+        self.valeur = None
+
         self.setWindowTitle(todo)
-        self.resize(350, 100)
+        self.resize(400, 100)
+
         self.setLayout(QVBoxLayout())
+        self.layH = QHBoxLayout()
+
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)  # Allow the scroll area to resize its content
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)  # Show vertical scroll bar as needed
-
         self.scroll_content = QWidget()
         self.scroll_content.setLayout(QVBoxLayout())
 
         self.ok_button = QPushButton("Valider")
         self.ok_button.setGeometry(50, 40, 100, 25)
-        self.ok_button.clicked.connect(self.accept)
+        self.ok_button.clicked.connect(self.popup_accept)
+
+        self.spin_box = QLineEdit()
+        self.spin_box_lab = QLabel("Valeur de remplacement")
 
         self.create_buttons(button_labels)
 
         self.scroll_area.setWidget(self.scroll_content)
+        self.layH.addWidget(self.spin_box_lab)
+        self.layH.addWidget(self.spin_box)
 
         self.search_field = QLineEdit()
         self.search_field.setPlaceholderText("Rechercher")
@@ -49,6 +59,8 @@ class CustomPopup(QDialog):
 
         self.layout().addWidget(self.search_field)
         self.layout().addWidget(self.scroll_area)
+        if fillvalue:
+            self.layout().addLayout(self.layH)
         self.layout().addWidget(self.ok_button)
 
         self.sheet = None
@@ -100,6 +112,44 @@ class CustomPopup(QDialog):
                 button.setVisible(True)
             else:
                 button.setVisible(False)
+
+    def popup_accept(self):
+        self.valeur = self.spin_box.text()
+        self.accept()
+
+
+class SampleView1(QDialog):
+    def __init__(self, maxval, chemin, sample_df=None):
+        super(SampleView1, self).__init__()
+        loadUi('ui/sample01.ui', self)
+        self.ssize = None
+        self.valeur.setMinimum(1)
+        self.valeur.setMaximum(maxval)
+        self.sample_btn.clicked.connect(self.proceed)
+        self.title = "Echantillon"
+        self.sampled_df = sample_df
+        self.show_btn.clicked.connect(self.show_sample)
+        self.export_path = chemin
+
+        self.exporter_btn.clicked.connect(self.export_sample)
+
+        self.exec_()
+
+    def proceed(self):
+        self.ssize = self.valeur.value()
+        self.accept()
+
+    def show_sample(self):
+        if self.sampled_df is not None:
+            ResultData(self.sampled_df, self.title)
+        else:
+            show_warning_messagebox("Procéder d'abord à l'échantillonnage.")
+
+    def export_sample(self):
+        if self.sampled_df is not None:
+            self.sampled_df.to_excel(self.export_path, index=False)
+        else:
+            show_warning_messagebox("Procéder d'abord à l'échantillonnage.")
 
 
 class ResultText(QDialog):
