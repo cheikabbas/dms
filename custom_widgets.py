@@ -250,3 +250,71 @@ class GraphShow(QMainWindow):
 
         # Plot some data
         self.matplotlib_view.plot_data(x=self.x, data=self.data, typegraph=self.typegraph)
+
+
+class MonitoringSetup(QDialog):
+    def __init__(self, varnames):
+        super(MonitoringSetup, self).__init__()
+        self.vars = []
+        self.enq = None
+        self.end = None
+        self.start = None
+        self.idvar = None
+        loadUi('ui/monitoring.ui', self)
+
+        self.varnames = varnames
+
+        self.close_btn.clicked.connect(self.close)
+
+        self.definitions.setHtml(f"""
+                                <b>Identifiant : </b><br>
+                                <b>Start : </b><br>
+                                <b>End : </b><br>
+                                <b>Enquêteur : </b><br>
+                                <b>Variables clés : </b><br>
+                                """)
+
+        self.idvar_btn.clicked.connect(self.idvariable)
+        self.start_btn.clicked.connect(self.startvariable)
+        self.end_btn.clicked.connect(self.endvariable)
+        self.enq_btn.clicked.connect(self.enqvariable)
+        self.vars_btn.clicked.connect(self.varsvariables)
+
+        self.exec_()
+
+    def idvariable(self):
+        idvar = CustomPopup(self.varnames, "Choisir la variable ID", "V1")
+        self.idvar = idvar.selected_var
+        self.choices()
+
+    def startvariable(self):
+        startvar = CustomPopup(self.varnames, "Choisir la variable start", "V1")
+        self.start = startvar.selected_var
+        self.choices()
+
+    def endvariable(self):
+        endvar = CustomPopup(self.varnames, "Choisir la variable end", "V1")
+        self.end = endvar.selected_var
+        self.choices()
+
+    def enqvariable(self):
+        enqvar = CustomPopup(self.varnames, "Choisir la variable 'Nom enquêteur'", "V1")
+        self.enq = enqvar.selected_var
+        self.choices()
+
+    def varsvariables(self):
+        vars = CustomPopup(self.varnames, "Choisir les variables clés à suivre", "VX")
+        self.vars = vars.selected_vars
+        self.choices()
+
+    def choices(self):
+        self.definitions.setHtml(f"""
+                                <b>Identifiant : </b>{self.idvar if self.idvar is not None else ""}<br>
+                                <b>Start : </b>{self.start if self.start is not None else ""}<br>
+                                <b>End : </b>{self.end if self.end is not None else ""}<br>
+                                <b>Enquêteur : </b>{self.enq if self.enq is not None else ""}<br>
+                                <b>Variables clés : </b>{str(self.vars) if len(self.vars) > 0 else ""}<br>
+                                """)
+
+    def close(self):
+        self.accept()

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>933</width>
-    <height>490</height>
+    <width>930</width>
+    <height>489</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <x>240</x>
      <y>120</y>
      <width>671</width>
-     <height>231</height>
+     <height>271</height>
     </rect>
    </property>
    <property name="title">
@@ -179,6 +179,19 @@
     </property>
     <property name="text">
      <string>Exportation de données</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="monitoring_btn">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>230</y>
+      <width>141</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Monitoring de collecte </string>
     </property>
    </widget>
   </widget>

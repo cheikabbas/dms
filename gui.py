@@ -1,11 +1,13 @@
 import os
 
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QFileDialog, QWidget, QMainWindow
 from PyQt5.uic import loadUi
 
-from custom_widgets import CustomPopup, ResultData, SampleView, ResultText, GraphShow
+from custom_widgets import CustomPopup, ResultData, SampleView, ResultText, GraphShow, MonitoringSetup
 from dms import Dms
 from messageBoxes import show_info_messagebox, show_warning_messagebox, show_critical_messagebox
+from monitoring import Monitoring
 
 
 class Home(QWidget):
@@ -20,7 +22,7 @@ class Home(QWidget):
     def open_project(self):
         try:
             directory = QFileDialog.getExistingDirectory(self, 'Sélectionner le projet',
-                                                         'C:/Users/ChargéMeal-RRM.bf/Desktop')
+                                                         'C:/Users/')
             if os.path.isfile(os.path.join(directory, 'config.dms')):
                 self.dms.open_project(directory)
             self.goto_projectopened()
@@ -86,6 +88,7 @@ class ProjectOpened(QWidget):
         super(ProjectOpened, self).__init__()
         loadUi('ui/projectopened.ui', self)
         self.dms = dms
+        self.monitoring = None
         self.close.clicked.connect(self.goto_home)
         self.quitter.clicked.connect(QApplication.instance().quit)
         self.loading_data.clicked.connect(self.load_data)
@@ -100,6 +103,7 @@ class ProjectOpened(QWidget):
         self.desc_analysis_btn.clicked.connect(self.analysis)
         self.stat_test_btn.clicked.connect(self.stat_test)
         self.datavis_btn.clicked.connect(self.graphic)
+        self.monitoring_btn.clicked.connect(self.show_monitoring)
         self.label.setText(f'Nom du projet : {str(self.dms.globalPath).split("/")[-1]}')
         self.loaded_data = False
         self.disable_btn()
@@ -227,6 +231,12 @@ class ProjectOpened(QWidget):
                 self.ope.setText(
                     self.ope.toPlainText() + f"\n-> Visualisation de {str(var.selected_var)}")
 
+    def show_monitoring(self):
+        monit = MonitoringSetup(self.dms.data.columns)
+        self.monitoring = Monitoring(monit.idvar, monit.start, monit.end, monit.enq, monit.vars, self.dms.data, self.dms.outputPath)
+        self.ope.setText(
+                    self.ope.toPlainText() + f"\n-> Monitoring de collecte")
+
     def disable_btn(self):
         self.duplicates_btn.setEnabled(self.loaded_data)
         self.outlier_btn.setEnabled(self.loaded_data)
@@ -240,10 +250,13 @@ class ProjectOpened(QWidget):
         self.stat_test_btn.setEnabled(self.loaded_data)
         self.datavis_btn.setEnabled(self.loaded_data)
         self.desc_analysis_btn.setEnabled(self.loaded_data)
+        self.monitoring_btn.setEnabled(self.loaded_data)
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.setWindowIcon(QIcon("images/icon.png"))
+        self.setWindowTitle("Data Management System")
         self.page1 = Home()
         self.setCentralWidget(self.page1)
