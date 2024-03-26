@@ -6,6 +6,7 @@ import openpyxl
 import pandas as pd
 import pyreadstat
 from openpyxl.utils.dataframe import dataframe_to_rows
+from scipy.stats import shapiro
 
 from custom_widgets import ResultData
 from messageBoxes import show_critical_messagebox, show_info_messagebox, show_warning_messagebox
@@ -193,7 +194,56 @@ class Dms:
     def sample_data(self, n):
         if n is not None:
             self.sample_df = self.data.sample(n)
-            show_info_messagebox(f"Echantillonnage éffectué avec succès. {n} lignes ont été tirées aléatoirement de la base de données.")
+            show_info_messagebox(
+                f"Echantillonnage éffectué avec succès. {n} lignes ont été tirées aléatoirement de la base de données.")
+
+    def analyze(self, variables):
+        statistics = {}
+
+        for column in self.data[variables].columns:
+            col_data = self.data[column]
+            col_type = col_data.dtype
+
+            if col_type == 'object':
+                statistics[column] = {
+                    'Variable': column,
+                    'Nombre': col_data.count(),
+                    'Unique': col_data.nunique(),
+                    'Mode': col_data.mode().iloc[0],
+                    'Fréquence': col_data.value_counts().max()
+                }
+            else:
+                statistics[column] = {
+                    'Variable': column,
+                    'Nombre': col_data.count(),
+                    'Moyenne': col_data.mean(),
+                    'Ecart-type': col_data.std(),
+                    'Min': col_data.min(),
+                    '25%': col_data.quantile(0.25),
+                    'Médiane': col_data.quantile(0.50),
+                    '75%': col_data.quantile(0.75),
+                    'Max': col_data.max()
+                }
+
+        return pd.DataFrame(statistics).T
+
+    def test_statistique(self, var, test):
+        res = ""
+        if type(self.data[var]) != "object":
+            try:
+                if test == "Test de normalité":
+                    statistic, p_value = shapiro(self.data[var])
+                    res = f"<b>Statistique du test : </b>{statistic}<br><b>P-value : </b>{p_value}<br>"
+                    if p_value < 0.05:
+                        res = res + "La p_value est significative et donc la variable ne suit pas une loi normale."
+                    else:
+                        res = res + "La p-value n'est pas significative et donc la variable suit une loi normale."
+            except ValueError:
+                pass
+        else:
+            show_critical_messagebox("Le type de variable choisie ne permet d'éffectuer un test de normalité.")
+        return res
+
 
 def get_datetime():
     """Retourne la date et l'heure pour nommer les fichiers"""

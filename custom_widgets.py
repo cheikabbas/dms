@@ -1,10 +1,13 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget, QScrollArea, QDialog, QApplication, QLineEdit, QSpinBox, \
-    QHBoxLayout, QLabel
+    QHBoxLayout, QLabel, QGraphicsView, QGraphicsScene, QMainWindow
 from PyQt5.uic import loadUi
+from matplotlib import pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import seaborn as sns
 
-from messageBoxes import show_info_messagebox, show_warning_messagebox
+from messageBoxes import show_info_messagebox, show_warning_messagebox, show_critical_messagebox
 
 
 class CustomButton(QPushButton):
@@ -118,9 +121,9 @@ class CustomPopup(QDialog):
         self.accept()
 
 
-class SampleView1(QDialog):
+class SampleView(QDialog):
     def __init__(self, maxval, chemin, sample_df=None):
-        super(SampleView1, self).__init__()
+        super(SampleView, self).__init__()
         loadUi('ui/sample01.ui', self)
         self.ssize = None
         self.valeur.setMinimum(1)
@@ -158,7 +161,7 @@ class ResultText(QDialog):
         loadUi('ui/resultsText.ui', self)
         self.resultats = resultats
         self.res_title.setText(title)
-        self.res.setPlainText(self.resultats)
+        self.res.setHtml(str(self.resultats))
         self.close_btn.clicked.connect(self.accept)
         self.copy_btn.clicked.connect(self.copy_text)
         self.exec_()
@@ -191,3 +194,59 @@ class ResultData(QDialog):
 
         model.setHorizontalHeaderLabels(self.df.columns)
         self.table_view.setModel(model)
+
+
+class Graphic(QGraphicsView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        # Create a QGraphicsScene
+        self.scene = QGraphicsScene()
+        self.setScene(self.scene)
+
+        # Create a matplotlib figure and canvas
+        self.figure = plt.figure()
+        self.canvas = FigureCanvas(self.figure)
+
+        # Add the canvas to the scene
+        self.scene.addWidget(self.canvas)
+
+    def plot_data(self, x, data, typegraph=None):
+        # Plot some data
+        if typegraph == "Barres":
+            sns.countplot(x=x, data=data)
+            plt.title(f"Diagramme en barres de {x}")
+            plt.ylabel("Nombre")
+            plt.show()
+        self.canvas.draw()
+
+
+class GraphShow(QMainWindow):
+    def __init__(self, x, data, typegraph):
+        super(GraphShow, self).__init__()
+
+        self.x = x
+        self.data = data
+        self.typegraph = typegraph
+
+        self.setWindowTitle("Graphique")
+        self.setGeometry(100, 100, 800, 600)
+
+        # Create a layout
+        layout = QVBoxLayout()
+
+        # Create a MatplotlibView widget
+        self.matplotlib_view = Graphic()
+
+        # Add the MatplotlibView widget to the layout
+        layout.addWidget(self.matplotlib_view)
+
+        # Create a QWidget for the layout
+        widget = QWidget()
+        widget.setLayout(layout)
+
+        # Set the central widget of the QMainWindow
+        self.setCentralWidget(widget)
+
+        # Plot some data
+        self.matplotlib_view.plot_data(x=self.x, data=self.data, typegraph=self.typegraph)

@@ -3,9 +3,9 @@ import os
 from PyQt5.QtWidgets import QApplication, QFileDialog, QWidget, QMainWindow
 from PyQt5.uic import loadUi
 
-from custom_widgets import CustomPopup, ResultData, SampleView1
+from custom_widgets import CustomPopup, ResultData, SampleView, ResultText, GraphShow
 from dms import Dms
-from messageBoxes import show_info_messagebox, show_warning_messagebox
+from messageBoxes import show_info_messagebox, show_warning_messagebox, show_critical_messagebox
 
 
 class Home(QWidget):
@@ -97,6 +97,9 @@ class ProjectOpened(QWidget):
         self.export_res_btn.clicked.connect(self.exportoutput)
         self.correct_na_btn.clicked.connect(self.corrections_na)
         self.sampling_btn.clicked.connect(self.sample_data)
+        self.desc_analysis_btn.clicked.connect(self.analysis)
+        self.stat_test_btn.clicked.connect(self.stat_test)
+        self.datavis_btn.clicked.connect(self.graphic)
         self.label.setText(f'Nom du projet : {str(self.dms.globalPath).split("/")[-1]}')
         self.loaded_data = False
         self.disable_btn()
@@ -182,12 +185,47 @@ class ProjectOpened(QWidget):
                         self.ope.toPlainText() + f"\n-> Remplacement des valeurs manquantes pour la variable {var.selected_var} par {var.valeur}")
 
     def sample_data(self):
-        ssize = SampleView1(self.dms.data.shape[0], str(self.dms.outputPath+'/sample.xlsx'), self.dms.sample_df)
+        ssize = SampleView(self.dms.data.shape[0], str(self.dms.outputPath + '/sample.xlsx'), self.dms.sample_df)
         if ssize.ssize is not None:
             self.dms.sample_data(ssize.ssize)
             ResultData(self.dms.sample_df, "Echantillon")
             self.ope.setText(
-                        self.ope.toPlainText() + f"\n-> Echantillonnage de {ssize.ssize} lignes.")
+                self.ope.toPlainText() + f"\n-> Echantillonnage de {ssize.ssize} lignes.")
+
+    def analysis(self):
+        variables = self.dms.data.columns
+        var = CustomPopup(variables, "Choisir une variable", "VX")
+        if var.selected_vars is not None:
+            result = self.dms.analyze(var.selected_vars)
+            ResultData(result, "Analyse descriptive")
+            self.ope.setText(
+                self.ope.toPlainText() + f"\n-> Analyse descriptives de {str(var.selected_vars)}")
+
+    def stat_test(self):
+        tests = ["Test de normalité"]
+        variables = self.dms.data.columns
+        test = CustomPopup(tests, "Choisir un test", "V1")
+        if test.selected_var is not None:
+            var = CustomPopup(variables, "Choisir une variable", "V1")
+            if var.selected_var is not None:
+                result = self.dms.test_statistique(var.selected_var, test.selected_var)
+                if result != "":
+                    ResultText(result, f"{test.selected_var} sur {var.selected_var}")
+                    self.ope.setText(
+                        self.ope.toPlainText() + f"\n-> Test de normalité sur {str(var.selected_var)}")
+                else:
+                    show_critical_messagebox("Le type de variable choisie ne permet d'éffectuer un test de normalité.")
+
+    def graphic(self):
+        graphs = ["Barres"]
+        variables = self.dms.data.columns
+        graph = CustomPopup(graphs, "Choisir un type de graphique", "V1")
+        if graph.selected_var is not None:
+            var = CustomPopup(variables, "Sélectionner une variable", "V1")
+            if var.selected_var is not None:
+                GraphShow(x=var.selected_var, data=self.dms.data, typegraph="Barres")
+                self.ope.setText(
+                    self.ope.toPlainText() + f"\n-> Visualisation de {str(var.selected_var)}")
 
     def disable_btn(self):
         self.duplicates_btn.setEnabled(self.loaded_data)
