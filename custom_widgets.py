@@ -1,13 +1,13 @@
+import seaborn as sns
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget, QScrollArea, QDialog, QApplication, QLineEdit, QSpinBox, \
+from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget, QScrollArea, QDialog, QApplication, QLineEdit, \
     QHBoxLayout, QLabel, QGraphicsView, QGraphicsScene, QMainWindow
 from PyQt5.uic import loadUi
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import seaborn as sns
 
-from messageBoxes import show_info_messagebox, show_warning_messagebox, show_critical_messagebox
+from messageBoxes import show_info_messagebox, show_warning_messagebox
 
 
 class CustomButton(QPushButton):
